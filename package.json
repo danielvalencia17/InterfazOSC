@@ -1,5 +1,26 @@
 {
+  "name": "interfaz-osc",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielvalencia17/InterfazOSC.git"
+  },
+  "author": "Daniel v",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danielvalencia17/InterfazOSC/issues"
+  },
+  "homepage": "https://github.com/danielvalencia17/InterfazOSC#readme",
+  "description": "",
   "devDependencies": {
     "electron": "^37.4.0"
+  },
+  "dependencies": {
+    "p5": "^2.0.5"
   }
 }
