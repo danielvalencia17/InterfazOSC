@@ -1,23 +1,29 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 530,
+    height: 420,
+    frame: false,
+    transparent: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      webSecurity: true,
-      allowRunningInsecureContent: true,
-      // Esto es clave 👇
-      media: {
-        audio: true,
-        video: true
-      }
     }
   });
 
   win.loadFile("index.html");
+
+  // --- Cerrar ventana ---
+  ipcMain.on("cerrar-ventana", () => {
+    win.close();
+  });
+
+  // --- Minimizar ventana ---
+  ipcMain.on("minimizar-ventana", () => {
+    win.minimize();
+  });
 }
 
 app.whenReady().then(createWindow);

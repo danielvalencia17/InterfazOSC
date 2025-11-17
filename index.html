@@ -1,14 +1,130 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Interfaz P5 + Electron</title>
-  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script-->
-  <!--script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script-->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.9/p5.min.js"></script>
-  <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
-</head>
-<body>
-  <script src="sketch.js"></script>
-</body>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Interfaz Fatima</title>
+
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.9/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@1/dist/ml5.min.js"></script>
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: white;
+        height: 100%;
+        width: 100%;
+      }
+      #titleText {
+        font-family: monospace;
+        font-size: 10px;
+        font-weight: bold;
+        color: #000000;
+        letter-spacing: 0.5px;
+    }
+
+      /* 🔹 Barra superior arrastrable */
+      #topbar {
+        width: 100%;
+        height: 28px;
+        background: white;
+        -webkit-app-region: drag;
+        display: flex;
+        justify-content: space-between; /* logo a la izquierda, botones a la derecha */
+        align-items: center;
+        border-bottom: 1px solid #ccc;
+        box-sizing: border-box;
+        padding: 0 10px;
+      }
+
+      /* 🔹 Contenedor para el logo de Fátima */
+      #logo-container {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 100%;
+      }
+
+      #logo-container img {
+        height: 18px; /* ajusta el tamaño según tu logo */
+        width: auto;
+        -webkit-app-region: no-drag; /* para poder hacer clic si lo necesitas */
+      }
+
+      /* 🔹 Botones de ventana */
+      .win-btn {
+        -webkit-app-region: no-drag;
+        background: none;
+        border: none;
+        color: black;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 0 10px;
+        transition: 0.2s;
+      }
+
+      .win-btn:hover {
+        background: #f0f0f0;
+      }
+
+      #cerrar:hover {
+        color: red;
+        background: #ffe5e5;
+      }
+
+      /* 🔹 Contenedor del canvas */
+      #container {
+        width: 100%;
+        height: calc(100% - 28px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        padding: 0; /* elimina márgenes visuales */
+      }
+
+      canvas {
+        -webkit-app-region: no-drag;
+        display: block;
+        margin: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="topbar">
+      <span id="titleText">Press Ctrl + R to Reload</span>
+      <div id="logo-container">
+        <img src="images/2.png" alt="Logo Fatima" />
+      </div>
+
+      <!-- 🔹 Botones a la derecha -->
+      <div>
+        <button id="minimizar" class="win-btn">—</button>
+        <button id="cerrar" class="win-btn">✕</button>
+      </div>
+    </div>
+
+    <!--div id="container">
+      
+    </div-->
+    <script src="sketch.js"></script>
+
+    <script>
+      const { ipcRenderer } = require("electron");
+
+      // Cerrar ventana
+      document.getElementById("cerrar").addEventListener("click", () => {
+        ipcRenderer.send("cerrar-ventana");
+      });
+
+      // Minimizar ventana
+      document.getElementById("minimizar").addEventListener("click", () => {
+        ipcRenderer.send("minimizar-ventana");
+      });
+    </script>
+  </body>
 </html>

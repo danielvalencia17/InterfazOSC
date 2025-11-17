@@ -1,3 +1,4 @@
+// ======== CONFIG OSC ========
 const osc = require("osc");
 
 let udpPort = new osc.UDPPort({
@@ -22,11 +23,11 @@ function sendOSC(address, value) {
   udpPort.send(msg);
 }
 
-// ---- ML5 + p5 ----
+// ======== ML5 + p5 ========
 let faceMesh;
 let handPose;
 let video;
-let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: false };
+let options = { maxFaces: 1, refineLandmarks: false, flipHorizontal: true };
 
 let detections = { face: [], hand: [] };
 let idCount = 0;
@@ -60,14 +61,20 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(640, 480);
+  createCanvas(530, 420, WEBGL);
+  background(255);
+    setAttributes('antialias', true);
+  setAttributes('perPixelLighting', true);
+  noStroke();
 
   video = createCapture(VIDEO);
-  video.size(640, 480);
+  video.size(350, 250);
   video.hide();
 
   faceMesh.detectStart(video, gotFaces);
   handPose.detectStart(video, gotHands);
+
+  
 }
 
 function updateDetections(label, results) {
@@ -106,16 +113,29 @@ function updateDetections(label, results) {
 
   for (let i = objects.length - 1; i >= 0; i--) {
     objects[i].timer--;
-    if (objects[i].timer <= 0) {
-      objects.splice(i, 1);
-    }
+    if (objects[i].timer <= 0) objects.splice(i, 1);
   }
 }
 
+// ======== DIBUJO ========
 function draw() {
-  image(video, 0, 0, width, height);
+  translate(-width/2, -height/2)
+  background(255);
 
-  // === Boca ===
+  // === DIBUJAR PUNTOS FACE ===
+  noStroke();
+  fill(0);
+  for (let face of detections.face) {
+    for (let k of face.keypoints) ellipse(k.x, k.y, 3, 3);
+  }
+
+  // === DIBUJAR PUNTOS MANOS ===
+  for (let hand of detections.hand) {
+    fill(0);
+    for (let k of hand.keypoints) ellipse(k.x, k.y, 4, 4);
+  }
+
+  // === BOCA ===
   for (let face of detections.face) {
     let topLip = face.keypoints[13];
     let bottomLip = face.keypoints[14];
@@ -125,17 +145,11 @@ function draw() {
       targetValor = map(mouthOpen, 10, 60, 0, 1, true);
       valor += (targetValor - valor) * easing;
 
-      fill(0, 200, 0);
-      rect(50, height - 80, valor * 300, 60);
-
-      fill(255);
-      textSize(16);
-      text("Boca", 55, height - 85);
 
     }
   }
 
-  // === Manos ===
+
   for (let hand of detections.hand) {
     let handLabel = hand.handedness;
 
@@ -150,38 +164,98 @@ function draw() {
         if (handLabel === "Left") {
           fingerTargetsLeft[f] = target;
           fingerValsLeft[f] += (fingerTargetsLeft[f] - fingerValsLeft[f]) * easing;
-
-          // OSC → mano izquierda controla links 5–8
           sendOSC(`/composition/dashboard/link${f + 5}`, fingerValsLeft[f]);
         } else if (handLabel === "Right") {
           fingerTargetsRight[f] = target;
           fingerValsRight[f] += (fingerTargetsRight[f] - fingerValsRight[f]) * easing;
-
-          // OSC → mano derecha controla links 1–4
           sendOSC(`/composition/dashboard/link${f + 1}`, fingerValsRight[f]);
-          
         }
       }
     }
   }
 
-  // === Visualización ===
-  for (let f = 0; f < fingerNames.length; f++) {
-    fill(fingerColorsLeft[f]);
-    rect(20, 50 + f * 70, fingerValsLeft[f] * 300, 40);
-    fill(255);
-    textSize(14);
-    text(fingerLabels[f] + " (Izq)", 25, 45 + f * 70);
+
+  drawKnobSet();
+}
+
+
+function drawKnob(x, y, value, col) {
+  push();
+  translate(x, y);
+  noStroke();
+  
+
+
+  fill(230);
+  ellipse(0, 0, 50, 50);
+
+
+  let angle = map(value, 0, 1, -PI * 0.75, PI * 0.75);
+  fill(col);
+  arc(0, 0, 50, 50, -PI * 0.75, angle, PIE);
+
+  stroke(0);
+  strokeWeight(3);
+  let r = 60;
+  let ix = cos(angle) * r;
+  let iy = sin(angle) * r;
+  line(0, 0, ix, iy);
+
+  pop();
+}
+// x, y, valorDedo, rango
+function drawSphere(x, y, value, name) {
+  //angulo  = map(valorDedo, rangoMin, rangoMax, 0, TWO_PI)
+  const fMax = fingerMax[name]
+  const angulo = map(value, 0, fMax, 0, 300)
+  let colArray = [
+    color(100),
+    color(100),
+    color(0),
+  ];
+
+ 
+  push()
+  translate(x, y)
+
+  for (let i = 0; i < colArray.length; i++) {
+    let angle = angulo + ((TWO_PI / colArray.length) * i);
+    let lightPosx = sin(angle);
+    let lightPosy = cos(angle);
+    directionalLight(colArray[i], lightPosx, lightPosy, lightPosx * lightPosy);
   }
 
+  ambientLight(20);
+  specularMaterial(255);
+  sphere(25)
+  pop()
+
+
+}
+
+function drawKnobSet() {
+  textAlign(LEFT);
+  textSize(12);
+
   for (let f = 0; f < fingerNames.length; f++) {
-    fill(fingerColorsRight[f]);
-    rect(width - 20 - fingerValsRight[f] * 300, 50 + f * 70, fingerValsRight[f] * 300, 40);
-    fill(255);
-    textSize(14);
-    text(fingerLabels[f] + " (Der)", width - 20 - fingerValsRight[f] * 300, 45 + f * 70);
+
+    const fName = fingerNames[f]
+
+    drawSphere(60, 80 + f * 70,fingerValsLeft[f], fName)
+   // drawKnob(60, 80 + f * 70, fingerValsLeft[f], color(fingerColorsLeft[f]));
+    fill(0);
+    text(fingerLabels[f] + " (Izq)", 35, 120 + f * 70);
+
+    //drawKnob(width - 60, 80 + f * 70, fingerValsRight[f], color(fingerColorsRight[f]));
+    drawSphere(width - 60, 80 + f * 70, fingerValsRight[f], fName)
+    fill(0);
+    textAlign(RIGHT);
+    text(fingerLabels[f] + " (Der)", width - 35, 120 + f * 70);
+
+    
   }
 }
+
 
 function gotFaces(results) {
   updateDetections("face", results);
